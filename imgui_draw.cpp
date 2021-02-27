@@ -906,14 +906,37 @@ void ImDrawList::AddPolyline(const ImVec2* points, const int points_count, ImU32
 
             float dx = p2.x - p1.x;
             float dy = p2.y - p1.y;
-            IM_NORMALIZE2F_OVER_ZERO(dx, dy);
-            dx *= (thickness * 0.5f);
-            dy *= (thickness * 0.5f);
 
-            _VtxWritePtr[0].pos.x = p1.x + dy; _VtxWritePtr[0].pos.y = p1.y - dx; _VtxWritePtr[0].uv = opaque_uv; _VtxWritePtr[0].col = col;
-            _VtxWritePtr[1].pos.x = p2.x + dy; _VtxWritePtr[1].pos.y = p2.y - dx; _VtxWritePtr[1].uv = opaque_uv; _VtxWritePtr[1].col = col;
-            _VtxWritePtr[2].pos.x = p2.x - dy; _VtxWritePtr[2].pos.y = p2.y + dx; _VtxWritePtr[2].uv = opaque_uv; _VtxWritePtr[2].col = col;
-            _VtxWritePtr[3].pos.x = p1.x - dy; _VtxWritePtr[3].pos.y = p1.y + dx; _VtxWritePtr[3].uv = opaque_uv; _VtxWritePtr[3].col = col;
+            #if defined FIX_ADDPOLYLINE_PERF
+                {
+                    float d2 = dx*dx + dy*dy;
+                    if (d2 > 0.0f)
+                    {
+                        float inv_len = ImRSqrt(d2);
+                        dx *= inv_len;
+                        dy *= inv_len;
+                    }
+                }
+
+                dx *= (thickness * 0.5f);
+                dy *= (thickness * 0.5f);
+                ImVec2 dynx( dy, -dx);
+                ImVec2 dnyx(-dy,  dx);
+                _VtxWritePtr[0].pos = p1 + dynx; _VtxWritePtr[0].uv = opaque_uv; _VtxWritePtr[0].col = col;
+                _VtxWritePtr[1].pos = p2 + dynx; _VtxWritePtr[1].uv = opaque_uv; _VtxWritePtr[1].col = col;
+                _VtxWritePtr[2].pos = p2 + dnyx; _VtxWritePtr[2].uv = opaque_uv; _VtxWritePtr[2].col = col;
+                _VtxWritePtr[3].pos = p1 + dnyx; _VtxWritePtr[3].uv = opaque_uv; _VtxWritePtr[3].col = col;
+            #else
+
+	            IM_NORMALIZE2F_OVER_ZERO(dx, dy);
+	            dx *= (thickness * 0.5f);
+	            dy *= (thickness * 0.5f);
+	
+	            _VtxWritePtr[0].pos.x = p1.x + dy; _VtxWritePtr[0].pos.y = p1.y - dx; _VtxWritePtr[0].uv = opaque_uv; _VtxWritePtr[0].col = col;
+	            _VtxWritePtr[1].pos.x = p2.x + dy; _VtxWritePtr[1].pos.y = p2.y - dx; _VtxWritePtr[1].uv = opaque_uv; _VtxWritePtr[1].col = col;
+	            _VtxWritePtr[2].pos.x = p2.x - dy; _VtxWritePtr[2].pos.y = p2.y + dx; _VtxWritePtr[2].uv = opaque_uv; _VtxWritePtr[2].col = col;
+	            _VtxWritePtr[3].pos.x = p1.x - dy; _VtxWritePtr[3].pos.y = p1.y + dx; _VtxWritePtr[3].uv = opaque_uv; _VtxWritePtr[3].col = col;
+            #endif
             _VtxWritePtr += 4;
 
             _IdxWritePtr[0] = (ImDrawIdx)(_VtxCurrentIdx); _IdxWritePtr[1] = (ImDrawIdx)(_VtxCurrentIdx + 1); _IdxWritePtr[2] = (ImDrawIdx)(_VtxCurrentIdx + 2);
@@ -3402,6 +3425,7 @@ void ImGui::RenderArrow(ImDrawList* draw_list, ImVec2 pos, ImU32 col, ImGuiDir d
         break;
     }
     draw_list->AddTriangleFilled(center + a, center + b, center + c, col);
+    RENDERARROW_BORDER;
 }
 
 void ImGui::RenderBullet(ImDrawList* draw_list, ImVec2 pos, ImU32 col)

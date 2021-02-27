@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{c99a2c42-4689-42b3-9f29-c11f65ad20d4}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)app\ImExt.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)app\ImGuiApp.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)examples\libs\ImFastRast\ImFastRast.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)examples\imgui_impl_dx10.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)examples\imgui_impl_dx11.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)examples\imgui_impl_glfw.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)examples\imgui_impl_opengl3.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)examples\imgui_impl_sw.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)examples\imgui_impl_win32.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)imconfig.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)imgui.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)imgui_internal.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)imstb_rectpack.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)imstb_textedit.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)imstb_truetype.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)misc\cpp\imgui_stdlib.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)misc\freetype\imgui_freetype.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)app\imconfig.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)app\ImGuiApp.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\libs\gl3w\GL\gl3w.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\libs\ImFastRast\ImFastRast.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)app\main_DX10.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)app\main_DX11.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)app\main_GL.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)app\main_SW.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\imgui_impl_dx10.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\imgui_impl_dx11.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\imgui_impl_glfw.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\imgui_impl_sw.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\imgui_impl_win32.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)imgui.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)imgui_demo.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)imgui_draw.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)imgui_widgets.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)misc\cpp\imgui_stdlib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)misc\freetype\imgui_freetype.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)misc\natvis\imgui.natvis" />
+  </ItemGroup>
+</Project>

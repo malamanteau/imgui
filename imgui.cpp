@@ -1453,6 +1453,7 @@ static const ImU32 GCrc32LookupTable[256] =
     0xBDBDF21C,0xCABAC28A,0x53B39330,0x24B4A3A6,0xBAD03605,0xCDD70693,0x54DE5729,0x23D967BF,0xB3667A2E,0xC4614AB8,0x5D681B02,0x2A6F2B94,0xB40BBE37,0xC30C8EA1,0x5A05DF1B,0x2D02EF8D,
 };
 
+#if defined IMGUI_NO_PREVENT_ID_COLLISIONS
 // Known size hash
 // It is ok to call ImHashData on a string with known length but the ### operator won't be supported.
 // FIXME-OPT: Replace with e.g. FNV1a hash? CRC32 pretty much randomly access 1KB. Need to do proper measurements.
@@ -1499,6 +1500,66 @@ ImU32 ImHashStr(const char* data_p, size_t data_size, ImU32 seed)
     }
     return ~crc;
 }
+#else
+static std::unordered_map<ImU32, std::tuple<std::string, ImU32>> allhashes;
+
+// Known size hash
+// It is ok to call ImHashData on a string with known length but the ### operator won't be supported.
+// FIXME-OPT: Replace with e.g. FNV1a hash? CRC32 pretty much randomly access 1KB. Need to do proper measurements.
+ImU32 ImHashData(const void* data_p, size_t data_size, ImU32 seed)
+{
+	std::string_view asStringView((char *)data_p, data_size);
+
+	ImU32 crc = ~seed;
+    const unsigned char* data = (const unsigned char*)data_p;
+    const ImU32* crc32_lut = GCrc32LookupTable;
+    while (data_size-- != 0)
+        crc = (crc >> 8) ^ crc32_lut[(crc & 0xFF) ^ *data++];
+
+	ImU32 hash = ~crc;
+
+	while (Handy::Contains(allhashes, hash))
+	{
+		std::tuple<std::string, ImU32> & item = allhashes[hash];
+
+		if (std::get<0>(item) == asStringView && std::get<1>(item) == seed)
+			return hash;
+
+		/// This is usually due to an unlabeled control: Try adding a label or use something like "##mycontrol", rather than leaving it unlabeled.
+		#if defined AIDEN_DEBUG
+		std::cout << "COLLISION: " << seed << " \"" << asStringView << "\" with " << std::get<1>(item) << " \"" << std::get<0>(item) << "\"" << std::endl;
+		#endif
+		hash += 777;
+	}
+
+	allhashes[hash] = std::make_tuple(asStringView, seed);
+	return hash;
+}
+
+// Zero-terminated string hash, with support for ### to reset back to seed value
+// We support a syntax of "label###id" where only "###id" is included in the hash, and only "label" gets displayed.
+// Because this syntax is rarely used we are optimizing for the common case.
+// - If we reach ### in the string we discard the hash so far and reset to the seed.
+// - We don't do 'current += 2; continue;' after handling ### to keep the code smaller/faster (measured ~10% diff in Debug build)
+// FIXME-OPT: Replace with e.g. FNV1a hash? CRC32 pretty much randomly access 1KB. Need to do proper measurements.
+ImU32 ImHashStr(const char* data_p, size_t data_size, ImU32 seed)
+{
+	std::string_view s;
+
+	if (data_size == 0)
+		s = std::string_view(data_p);
+	else
+		s = std::string_view(data_p, data_size);
+
+	size_t pos = s.find("###"); //find location of word
+	if (pos != std::string_view::npos)
+		s = s.substr(pos);
+
+	return ImHashData(s.data(), s.size(), seed);
+}
+#endif
+
+
 
 //-----------------------------------------------------------------------------
 // [SECTION] MISC HELPERS/UTILITIES (File functions)

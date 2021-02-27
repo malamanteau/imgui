@@ -11,7 +11,8 @@
 // https://github.com/ocornut/imgui
 
 #pragma once
-#include "imgui.h"      // IMGUI_IMPL_API
+
+#include "../app/ImGuiApp.hpp"
 
 struct ID3D10Device;
 
@@ -23,3 +24,6 @@ IMGUI_IMPL_API void     ImGui_ImplDX10_RenderDrawData(ImDrawData* draw_data);
 // Use if you want to reset your rendering device without losing Dear ImGui state.
 IMGUI_IMPL_API void     ImGui_ImplDX10_InvalidateDeviceObjects();
 IMGUI_IMPL_API bool     ImGui_ImplDX10_CreateDeviceObjects();
+
+IMGUI_IMPL_API void     ImGui_ImplDX10_CreateFontsTexture();
+IMGUI_IMPL_API void     ImGui_ImplDX10_DestroyFontTexture();

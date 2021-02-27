@@ -3,6 +3,7 @@
 *.c text
 *.cpp text
 *.h text
+*.hpp text
 *.m text
 *.mm text
 *.md text

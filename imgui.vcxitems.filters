@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="impl">
+      <UniqueIdentifier>{b7cc1964-cbfd-4cbe-a000-a1982ec7e13a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="main">
+      <UniqueIdentifier>{481645e7-5078-4ada-accb-a57e6054c993}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="misc">
+      <UniqueIdentifier>{7544e5e4-1d90-4d09-99cb-20a80cee64d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="app">
+      <UniqueIdentifier>{77a31078-9b9a-4243-bbbd-d96ef6cfc98a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)examples\imgui_impl_win32.h">
+      <Filter>impl</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)examples\imgui_impl_dx10.h">
+      <Filter>impl</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)examples\imgui_impl_dx11.h">
+      <Filter>impl</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)examples\imgui_impl_glfw.h">
+      <Filter>impl</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)examples\imgui_impl_opengl3.h">
+      <Filter>impl</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)imgui_internal.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)imstb_rectpack.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)imstb_textedit.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)imstb_truetype.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)imgui.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)misc\cpp\imgui_stdlib.h">
+      <Filter>misc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)misc\freetype\imgui_freetype.h">
+      <Filter>misc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)examples\imgui_impl_sw.h">
+      <Filter>impl</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)examples\libs\ImFastRast\ImFastRast.hpp">
+      <Filter>impl</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)app\ImExt.hpp">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)imconfig.h">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)app\ImGuiApp.hpp">
+      <Filter>app</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\imgui_impl_dx10.cpp">
+      <Filter>impl</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\imgui_impl_dx11.cpp">
+      <Filter>impl</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\imgui_impl_glfw.cpp">
+      <Filter>impl</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\imgui_impl_opengl3.cpp">
+      <Filter>impl</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\imgui_impl_win32.cpp">
+      <Filter>impl</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)imgui_demo.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)imgui_draw.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)imgui_widgets.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)imgui.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)misc\freetype\imgui_freetype.cpp">
+      <Filter>misc</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)misc\cpp\imgui_stdlib.cpp">
+      <Filter>misc</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\imgui_impl_sw.cpp">
+      <Filter>impl</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\libs\ImFastRast\ImFastRast.cpp">
+      <Filter>impl</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)app\imconfig.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)app\ImGuiApp.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)app\main_DX10.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)app\main_DX11.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)app\main_GL.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)app\main_SW.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)examples\libs\gl3w\GL\gl3w.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)misc\natvis\imgui.natvis" />
+  </ItemGroup>
+</Project>

@@ -63,14 +63,18 @@ static bool                 g_HasGamepad = false;
 static bool                 g_WantUpdateHasGamepad = true;
 static bool                 g_WantUpdateMonitors = true;
 
+static bool                 g_isSWRast = false;
+
 // Forward Declarations
 static void ImGui_ImplWin32_InitPlatformInterface();
 static void ImGui_ImplWin32_ShutdownPlatformInterface();
 static void ImGui_ImplWin32_UpdateMonitors();
 
 // Functions
-bool    ImGui_ImplWin32_Init(void* hwnd)
+bool    ImGui_ImplWin32_Init(void* hwnd, bool isSWRast)
 {
+    g_isSWRast = isSWRast;
+    
     if (!::QueryPerformanceFrequency((LARGE_INTEGER*)&g_TicksPerSecond))
         return false;
     if (!::QueryPerformanceCounter((LARGE_INTEGER*)&g_Time))
@@ -581,6 +585,15 @@ struct ImGuiViewportDataWin32
 
 static void ImGui_ImplWin32_GetWin32StyleFromViewportFlags(ImGuiViewportFlags flags, DWORD* out_style, DWORD* out_ex_style)
 {
+#if defined ADD_AGK_MAINWINDOW
+    if (flags & AGK_MainWindow)
+    {
+        *out_style = WS_OVERLAPPEDWINDOW/* ^ WS_THICKFRAME*/;
+        *out_ex_style = WS_EX_APPWINDOW;
+    }
+    else
+    {
+#endif
     if (flags & ImGuiViewportFlags_NoDecoration)
         *out_style = WS_POPUP;
     else
@@ -593,6 +606,9 @@ static void ImGui_ImplWin32_GetWin32StyleFromViewportFlags(ImGuiViewportFlags fl
 
     if (flags & ImGuiViewportFlags_TopMost)
         *out_ex_style |= WS_EX_TOPMOST;
+#if defined ADD_AGK_MAINWINDOW
+    }
+#endif
 }
 
 static void ImGui_ImplWin32_CreateWindow(ImGuiViewport* viewport)
@@ -793,6 +809,15 @@ static LRESULT CALLBACK ImGui_ImplWin32_WndProcHandler_PlatformWindow(HWND hWnd,
     {
         switch (msg)
         {
+        case WM_ERASEBKGND:
+        case WM_PAINT:
+            if (g_isSWRast)
+            {
+                //mark the window as validated without actually doing anything, it will get repainted in the main loop
+                ValidateRect(hWnd, nullptr);
+                return 0;
+            }
+            break;
         case WM_CLOSE:
             viewport->PlatformRequestClose = true;
             return 0;
@@ -822,16 +847,19 @@ static LRESULT CALLBACK ImGui_ImplWin32_WndProcHandler_PlatformWindow(HWND hWnd,
 
 static void ImGui_ImplWin32_InitPlatformInterface()
 {
-    WNDCLASSEX wcex;
+    WNDCLASSEX wcex = { 0 };
     wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.style = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc = ImGui_ImplWin32_WndProcHandler_PlatformWindow;
-    wcex.cbClsExtra = 0;
-    wcex.cbWndExtra = 0;
     wcex.hInstance = ::GetModuleHandle(NULL);
     wcex.hIcon = NULL;
     wcex.hCursor = NULL;
+    if (!g_isSWRast)
+    {
+        wcex.style = CS_HREDRAW | CS_VREDRAW;
+        wcex.cbClsExtra = 0;
+        wcex.cbWndExtra = 0;
     wcex.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1);
+    }
     wcex.lpszMenuName = NULL;
     wcex.lpszClassName = _T("ImGui Platform");
     wcex.hIconSm = NULL;

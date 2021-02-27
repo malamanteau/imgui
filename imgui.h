@@ -2283,6 +2283,8 @@ struct ImDrawList
     IMGUI_API void  _OnChangedClipRect();
     IMGUI_API void  _OnChangedTextureID();
     IMGUI_API void  _OnChangedVtxOffset();
+    
+    DRAWLIST_METHODS_DECL
 };
 
 // All draw data to render a Dear ImGui frame
@@ -2689,6 +2691,10 @@ enum ImGuiViewportFlags_
     ImGuiViewportFlags_Minimized                = 1 << 7,   // Platform Window: Window is minimized, can skip render. When minimized we tend to avoid using the viewport pos/size for clipping window or testing if they are contained in the viewport.
     ImGuiViewportFlags_NoAutoMerge              = 1 << 8,   // Platform Window: Avoid merging this window into another host window. This can only be set via ImGuiWindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
     ImGuiViewportFlags_CanHostOtherWindows      = 1 << 9    // Main viewport: can host multiple imgui windows (secondary viewports are associated to a single window).
+
+#if defined ADD_AGK_MAINWINDOW
+    , AGK_MainWindow = 1 << 30
+#endif
 };
 
 // The viewports created and managed by Dear ImGui. The role of the platform back-end is to create the platform/OS windows corresponding to each viewport.
@@ -2705,6 +2711,8 @@ struct ImGuiViewport
     float               DpiScale;               // 1.0f = 96 DPI = No extra scale.
     ImDrawData*         DrawData;               // The ImDrawData corresponding to this viewport. Valid after Render() and until the next call to NewFrame().
     ImGuiID             ParentViewportId;       // (Advanced) 0: no parent. Instruct the platform back-end to setup a parent/child relationship between platform windows.
+
+	ADD_VIEWPORT_REFRESH_FIELDS
 
     // Our design separate the Renderer and Platform back-ends to facilitate combining default back-ends with each others.
     // When our create your own back-end for a custom engine, it is possible that both Renderer and Platform will be handled

@@ -42,8 +42,9 @@
 //  2017-08-25: Inputs: MousePos set to -FLT_MAX,-FLT_MAX when mouse is unavailable/missing (instead of -1,-1).
 //  2016-10-15: Misc: Added a void* user_data parameter to Clipboard function handlers.
 
-#include "imgui.h"
 #include "imgui_impl_glfw.h"
+#include "imgui.h"
+
 
 // GLFW
 #include <GLFW/glfw3.h>
@@ -548,6 +549,12 @@ static void ImGui_ImplGlfw_WindowSizeCallback(GLFWwindow* window, int, int)
             if (ignore_event)
                 return;
         }
+        
+        //A resize on the upper or lower edge of a window will generally move the window origin (even though a window move callback won't necessarilly
+        //be triggered). We need to make sure ImGui updates the window origin, so we set PlatformRequestMove to true (in addition to PlatformRequestResize).
+        #if defined IS_LINUX
+			viewport->PlatformRequestMove = true;
+		#endif
         viewport->PlatformRequestResize = true;
     }
 }
@@ -564,6 +571,11 @@ static void ImGui_ImplGlfw_CreateWindow(ImGuiViewport* viewport)
 #if GLFW_HAS_FOCUS_ON_SHOW
      glfwWindowHint(GLFW_FOCUS_ON_SHOW, false);
  #endif
+#if defined ADD_AGK_MAINWINDOW
+    if (viewport->Flags & AGK_MainWindow)
+        glfwWindowHint(GLFW_DECORATED, true);
+    else
+#endif
     glfwWindowHint(GLFW_DECORATED, (viewport->Flags & ImGuiViewportFlags_NoDecoration) ? false : true);
 #if GLFW_HAS_WINDOW_TOPMOST
     glfwWindowHint(GLFW_FLOATING, (viewport->Flags & ImGuiViewportFlags_TopMost) ? true : false);
@@ -695,6 +707,17 @@ static ImVec2 ImGui_ImplGlfw_GetWindowSize(ImGuiViewport* viewport)
 static void ImGui_ImplGlfw_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
 {
     ImGuiViewportDataGlfw* data = (ImGuiViewportDataGlfw*)viewport->PlatformUserData;
+
+    int width = -1; 
+    int height = -1;
+
+    glfwGetWindowSize(data->Window, &width, &height);
+
+    if (width == (int)size.x && height == (int)size.y)
+        return;
+
+    ImGuiApp::Instance().zInternal_WasResized() = true;
+
 #if __APPLE__ && !GLFW_HAS_OSX_WINDOW_POS_FIX
     // Native OS windows are positioned from the bottom-left corner on macOS, whereas on other platforms they are
     // positioned from the upper-left corner. GLFW makes an effort to convert macOS style coordinates, however it

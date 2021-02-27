@@ -27,8 +27,13 @@
 //  2018-02-06: Misc: Removed call to ImGui::Shutdown() which is not available from 1.60 WIP, user needs to call CreateContext/DestroyContext themselves.
 //  2016-05-07: DirectX11: Disabling depth-write.
 
-#include "imgui.h"
+#include <thread>
+#include <chrono>
+#include "../app/ImGuiApp.hpp"
+
 #include "imgui_impl_dx11.h"
+#include "imgui.h"
+#include "misc/freetype/imgui_freetype.h"
 
 // DirectX
 #include <stdio.h>
@@ -39,7 +44,7 @@
 #endif
 
 // DirectX data
-static ID3D11Device*            g_pd3dDevice = NULL;
+ID3D11Device*            g_pd3dDevice = NULL;
 static ID3D11DeviceContext*     g_pd3dDeviceContext = NULL;
 static IDXGIFactory*            g_pFactory = NULL;
 static ID3D11Buffer*            g_pVB = NULL;
@@ -54,6 +59,109 @@ static ID3D11RasterizerState*   g_pRasterizerState = NULL;
 static ID3D11BlendState*        g_pBlendState = NULL;
 static ID3D11DepthStencilState* g_pDepthStencilState = NULL;
 static int                      g_VertexBufferSize = 5000, g_IndexBufferSize = 10000;
+
+namespace ImGuiTextures::DX11 {
+
+    ImTextureID CreateImageRGBA8888(uint8_t const * pixels, int32_t width, int32_t height)
+    {
+        Locked(ImGuiApp::ContextMutex)
+        {
+            if (!ImGuiApp::ContextValid)
+                return nullptr;
+
+            ID3D11ShaderResourceView * ret = nullptr;
+
+            D3D11_TEXTURE2D_DESC desc;
+            ZeroMemory(&desc, sizeof(desc));
+            desc.Width = width;
+            desc.Height = height;
+            desc.MipLevels = 1;
+            desc.ArraySize = 1;
+            desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+            desc.SampleDesc.Count = 1;
+            desc.Usage = D3D11_USAGE_DEFAULT;
+            desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+            desc.CPUAccessFlags = 0;
+
+            ID3D11Texture2D *pTexture = NULL;
+            D3D11_SUBRESOURCE_DATA subResource;
+            subResource.pSysMem = pixels;
+            subResource.SysMemPitch = desc.Width * 4;
+            subResource.SysMemSlicePitch = 0;
+            g_pd3dDevice->CreateTexture2D(&desc, &subResource, &pTexture);
+
+            // Create texture view
+            D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc;
+            ZeroMemory(&srv_desc, sizeof(srv_desc));
+            srv_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+            srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+            srv_desc.Texture2D.MipLevels = desc.MipLevels;
+            srv_desc.Texture2D.MostDetailedMip = 0;
+            g_pd3dDevice->CreateShaderResourceView(pTexture, &srv_desc, &ret);
+            pTexture->Release();
+
+            return (ImTextureID)ret;
+        }
+    }
+
+    ImTextureID CreateImageBGRA8888(uint8_t const * pixels, int32_t width, int32_t height)
+    {
+        Locked(ImGuiApp::ContextMutex)
+        {
+            if (!ImGuiApp::ContextValid)
+                return nullptr;
+
+            ID3D11ShaderResourceView * ret = nullptr;
+
+            D3D11_TEXTURE2D_DESC desc;
+            ZeroMemory(&desc, sizeof(desc));
+            desc.Width = width;
+            desc.Height = height;
+            desc.MipLevels = 1;
+            desc.ArraySize = 1;
+            desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+            desc.SampleDesc.Count = 1;
+            desc.Usage = D3D11_USAGE_DEFAULT;
+            desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+            desc.CPUAccessFlags = 0;
+
+            ID3D11Texture2D *pTexture = NULL;
+            D3D11_SUBRESOURCE_DATA subResource;
+            subResource.pSysMem = pixels;
+            subResource.SysMemPitch = desc.Width * 4;
+            subResource.SysMemSlicePitch = 0;
+            g_pd3dDevice->CreateTexture2D(&desc, &subResource, &pTexture);
+
+            // Create texture view
+            D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc;
+            ZeroMemory(&srv_desc, sizeof(srv_desc));
+            srv_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+            srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+            srv_desc.Texture2D.MipLevels = desc.MipLevels;
+            srv_desc.Texture2D.MostDetailedMip = 0;
+            g_pd3dDevice->CreateShaderResourceView(pTexture, &srv_desc, &ret);
+            pTexture->Release();
+
+            return (ImTextureID)ret;
+        }
+    }
+
+    void DeleteImage(ImTextureID img)
+    {
+        Locked(ImGuiApp::ContextMutex)
+        {
+            if (!ImGuiApp::ContextValid)
+                return;
+
+            ID3D11ShaderResourceView * res = (ID3D11ShaderResourceView *)img;
+
+            if (res)
+                res->Release();
+
+            return;
+        }
+    }
+}
 
 struct VERTEX_CONSTANT_BUFFER
 {
@@ -283,12 +391,15 @@ void ImGui_ImplDX11_RenderDrawData(ImDrawData* draw_data)
     ctx->IASetInputLayout(old.InputLayout); if (old.InputLayout) old.InputLayout->Release();
 }
 
-static void ImGui_ImplDX11_CreateFontsTexture()
+void ImGui_ImplDX11_CreateFontsTexture()
 {
     // Build texture atlas
     ImGuiIO& io = ImGui::GetIO();
     unsigned char* pixels;
     int width, height;
+
+    ImGuiFreeType::BuildFontAtlas(io.Fonts, ImGuiFreeType::RasterizerFlags::ForceAutoHint);
+
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
     // Upload texture to graphics system
@@ -330,10 +441,10 @@ static void ImGui_ImplDX11_CreateFontsTexture()
     {
         D3D11_SAMPLER_DESC desc;
         ZeroMemory(&desc, sizeof(desc));
-        desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-        desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-        desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-        desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;  //D3D11_FILTER_MIN_MAG_MIP_POINT;
+        desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+        desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+        desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
         desc.MipLODBias = 0.f;
         desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
         desc.MinLOD = 0.f;
@@ -495,6 +606,13 @@ bool    ImGui_ImplDX11_CreateDeviceObjects()
     return true;
 }
 
+
+void ImGui_ImplDX11_DestroyFontTexture()
+{
+    if (g_pFontSampler) { g_pFontSampler->Release(); g_pFontSampler = NULL; }
+    if (g_pFontTextureView) { g_pFontTextureView->Release(); g_pFontTextureView = NULL; ImGui::GetIO().Fonts->TexID = NULL; } // We copied g_pFontTextureView to io.Fonts->TexID so let's clear that as well.
+}
+
 void    ImGui_ImplDX11_InvalidateDeviceObjects()
 {
     if (!g_pd3dDevice)
@@ -641,6 +759,8 @@ static void ImGui_ImplDX11_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
     }
     if (data->SwapChain)
     {
+        ImGuiApp::Instance().zInternal_WasResized() = true;
+
         ID3D11Texture2D* pBackBuffer = NULL;
         data->SwapChain->ResizeBuffers(0, (UINT)size.x, (UINT)size.y, DXGI_FORMAT_UNKNOWN, 0);
         data->SwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
@@ -652,6 +772,55 @@ static void ImGui_ImplDX11_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
 
 static void ImGui_ImplDX11_RenderWindow(ImGuiViewport* viewport, void*)
 {
+    using XXHash64 = Handy::Hash::XXHash64;
+    static Handy::StopWatch sw;
+
+    uint64 lastHValue = 0;
+    if (viewport->UserData)
+    {
+        lastHValue = ((XXHash64*)viewport->UserData)->Get();
+
+        delete (XXHash64*)viewport->UserData;
+        viewport->UserData = nullptr;
+    }
+
+    viewport->UserData = new XXHash64(1105121757519812621_u64);
+    XXHash64 * h = (XXHash64 *)viewport->UserData;
+
+    ImGuiIO & io = ImGui::GetIO();
+
+    const float width_points  = io.DisplaySize.x;
+    const float height_points = io.DisplaySize.y;
+
+    ImDrawData * draw_data = viewport->DrawData;
+
+    const int  width_pixels = (int)(draw_data->DisplaySize.x * io.DisplayFramebufferScale.x);
+    const int height_pixels = (int)(draw_data->DisplaySize.y * io.DisplayFramebufferScale.y);
+
+    h->Add(&width_pixels,               4_u64);
+    h->Add(&height_pixels,              4_u64);
+    h->Add(&(draw_data->CmdListsCount), 4_u64);
+
+    for (int i = 0; i < draw_data->CmdListsCount; i++)
+    {
+        h->Add(&(draw_data->CmdLists[i]->VtxBuffer[0]), draw_data->CmdLists[i]->VtxBuffer.size() * sizeof(ImDrawVert));
+        h->Add(&(draw_data->CmdLists[i]->IdxBuffer[0]), draw_data->CmdLists[i]->IdxBuffer.size() * sizeof(ImDrawIdx));
+        h->Add(&(draw_data->CmdLists[i]->CmdBuffer[0]), draw_data->CmdLists[i]->CmdBuffer.size() * sizeof(ImDrawCmd));
+    }
+
+    uint64_t time = sw.Seconds();
+    h->Add(&time, 8);
+
+    uint64 nuHValue = h->Get();
+
+    if (lastHValue == nuHValue)
+    {
+        viewport->NeedSwap = false;
+        return;
+    }
+    else 
+        viewport->NeedSwap = true;
+
     ImGuiViewportDataDx11* data = (ImGuiViewportDataDx11*)viewport->RendererUserData;
     ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
     g_pd3dDeviceContext->OMSetRenderTargets(1, &data->RTView, NULL);
@@ -662,6 +831,9 @@ static void ImGui_ImplDX11_RenderWindow(ImGuiViewport* viewport, void*)
 
 static void ImGui_ImplDX11_SwapBuffers(ImGuiViewport* viewport, void*)
 {
+    if (!viewport->NeedSwap)
+        return;
+
     ImGuiViewportDataDx11* data = (ImGuiViewportDataDx11*)viewport->RendererUserData;
     data->SwapChain->Present(0, 0); // Present without vsync
 }
