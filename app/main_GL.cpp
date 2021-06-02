@@ -248,6 +248,13 @@ void ImGuiApp::initGL()
 	if (!glfwInit())
 		throw std::runtime_error("Cannot Initialize GLFW");
 
+	float xscale = 1_f, yscale = 1_f;
+	glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &xscale, &yscale);
+	float defScaling = Handy::FastMax(xscale, yscale);
+
+	ImGuiApp::Instance().SetScaling(defScaling);
+	ImGuiApp::Instance().SetDefaultScaling(defScaling);
+	
 	// Decide GL+GLSL versions
 	#if __APPLE__
 	// GL 3.2 + GLSL 150
