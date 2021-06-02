@@ -705,6 +705,55 @@ void    ImGui_ImplOpenGL3_DestroyDeviceObjects()
 
 static void ImGui_ImplOpenGL3_RenderWindow(ImGuiViewport* viewport, void*)
 {
+	using XXHash64 = Handy::Hash::XXHash64;
+	static Handy::StopWatch sw;
+
+	uint64 lastHValue = 0;
+	if (viewport->UserData)
+	{
+		lastHValue = ((XXHash64*)viewport->UserData)->Get();
+
+		delete (XXHash64*)viewport->UserData;
+		viewport->UserData = nullptr;
+	}
+
+	viewport->UserData = new XXHash64(1105121757519812621_u64);
+	XXHash64 * h = (XXHash64 *)viewport->UserData;
+
+	ImGuiIO & io = ImGui::GetIO();
+
+	const float width_points  = io.DisplaySize.x;
+	const float height_points = io.DisplaySize.y;
+
+	ImDrawData * draw_data = viewport->DrawData;
+
+	const int  width_pixels = (int)(draw_data->DisplaySize.x * io.DisplayFramebufferScale.x);
+	const int height_pixels = (int)(draw_data->DisplaySize.y * io.DisplayFramebufferScale.y);
+
+	h->Add(&width_pixels,               4_u64);
+	h->Add(&height_pixels,              4_u64);
+	h->Add(&(draw_data->CmdListsCount), 4_u64);
+
+	for (int i = 0; i < draw_data->CmdListsCount; i++)
+	{
+		h->Add(&(draw_data->CmdLists[i]->VtxBuffer[0]), draw_data->CmdLists[i]->VtxBuffer.size() * sizeof(ImDrawVert));
+		h->Add(&(draw_data->CmdLists[i]->IdxBuffer[0]), draw_data->CmdLists[i]->IdxBuffer.size() * sizeof(ImDrawIdx));
+		h->Add(&(draw_data->CmdLists[i]->CmdBuffer[0]), draw_data->CmdLists[i]->CmdBuffer.size() * sizeof(ImDrawCmd));
+	}
+
+	uint64_t time = sw.Seconds();
+	h->Add(&time, 8);
+
+	uint64 nuHValue = h->Get();
+
+	if (lastHValue == nuHValue)
+	{
+		viewport->NeedSwap = false;
+		return;
+	}
+	else 
+		viewport->NeedSwap = true;
+	
     if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear))
     {
         ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
