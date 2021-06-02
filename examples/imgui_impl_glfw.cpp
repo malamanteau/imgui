@@ -778,6 +778,9 @@ static void ImGui_ImplGlfw_RenderWindow(ImGuiViewport* viewport, void*)
 
 static void ImGui_ImplGlfw_SwapBuffers(ImGuiViewport* viewport, void*)
 {
+	if (!viewport->NeedSwap)
+		return;
+	
     ImGuiViewportDataGlfw* data = (ImGuiViewportDataGlfw*)viewport->PlatformUserData;
     if (g_ClientApi == GlfwClientApi_OpenGL)
     {
